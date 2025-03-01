@@ -9,8 +9,11 @@ declare global {
   };
 }
 
-// Initialize the global mongoose object
-global._mongoose = global._mongoose || { conn: null, promise: null };
+// Initialize the global mongoose object using an if statement
+// This avoids the ESLint warning while maintaining the same functionality
+if (!global._mongoose) {
+  global._mongoose = { conn: null, promise: null };
+}
 
 /**
  * Connect to MongoDB for Next.js applications
