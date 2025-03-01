@@ -44,9 +44,7 @@ export const connectMongo = async (
   // Create a new connection promise
   global._mongoose.promise = mongoose.connect(uri, {
     dbName: options?.dbName,
-    useNewUrlParser: true, // Avoids deprecation warning
-    useUnifiedTopology: true, // Ensures stable connection pooling
-  } as any); // Casting to `any` to avoid TS complaints
+  });
 
   try {
     // Store the connection in the global cache
