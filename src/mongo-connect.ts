@@ -34,9 +34,10 @@ export const connectMongo = async (
   const uri = options?.uri || process.env.MONGODB_URI;
 
   if (!uri) {
-    throw new Error(
-      "MongoDB URI not provided. Set MONGODB_URI in .env file or pass as parameter"
-    );
+    const errorMessage =
+      "MongoDB URI not provided. Set MONGODB_URI in .env file or pass as parameter";
+    console.error("CONNECTION ERROR:", errorMessage);
+    throw new Error(errorMessage);
   }
 
   // Recommended by Mongoose to avoid deprecation warnings
