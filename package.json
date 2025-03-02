@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/Dewruwan95/mongo-connect-next.git"
   },
   "keywords": [
     "mongodb",
@@ -25,6 +25,10 @@
   ],
   "author": "Idea Graphix",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Dewruwan95/mongo-connect-next/issues"
+  },
+  "homepage": "https://github.com/Dewruwan95/mongo-connect-next#readme",
   "devDependencies": {
     "@types/mongoose": "^5.11.96",
     "@types/node": "^22.13.8",
