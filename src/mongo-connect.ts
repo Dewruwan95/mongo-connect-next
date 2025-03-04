@@ -4,14 +4,16 @@ import { ConnectOptions } from "./types";
 // Global variable to cache the connection
 declare global {
   // eslint-disable-next-line no-var
-  var _mongoose: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
+  var _mongoConnections: {
+    [key: string]: {
+      conn: typeof mongoose | null;
+      promise: Promise<typeof mongoose> | null;
+    };
   };
 }
 
 // Initialize the global mongoose object
-global._mongoose = global._mongoose || { conn: null, promise: null };
+global._mongoConnections = global._mongoConnections || {};
 
 /**
  * Connect to MongoDB for Next.js applications
@@ -21,16 +23,6 @@ global._mongoose = global._mongoose || { conn: null, promise: null };
 export const connectMongo = async (
   options?: ConnectOptions
 ): Promise<typeof mongoose> => {
-  // If we have an existing connection, return it
-  if (global._mongoose.conn) {
-    return global._mongoose.conn;
-  }
-
-  // If a connection is being established, wait for it
-  if (global._mongoose.promise) {
-    return await global._mongoose.promise;
-  }
-
   const uri = options?.uri || process.env.MONGODB_URI;
 
   if (!uri) {
@@ -40,22 +32,46 @@ export const connectMongo = async (
     throw new Error(errorMessage);
   }
 
+  // Use dbName as a key, or use a default key if not provided
+  const dbKey = options?.dbName || "default";
+
+  // Check if we have an existing connection
+  const existingConnection = global._mongoConnections[dbKey];
+
+  // If connection exists and is established, return it
+  if (existingConnection?.conn) {
+    return existingConnection.conn;
+  }
+
+  // If a connection is being established, wait for it
+  if (existingConnection?.promise) {
+    return await existingConnection.promise;
+  }
+
   // Recommended by Mongoose to avoid deprecation warnings
   mongoose.set("strictQuery", false);
 
   // Create a new connection promise
-  global._mongoose.promise = mongoose.connect(uri, {
+  const connectionPromise = mongoose.connect(uri, {
     dbName: options?.dbName,
   });
 
+  // Store the connection in the global cache
+  global._mongoConnections[dbKey] = {
+    conn: null,
+    promise: connectionPromise,
+  };
+
   try {
-    // Store the connection in the global cache
-    global._mongoose.conn = await global._mongoose.promise;
-    console.log("MongoDB connected successfully");
-    return global._mongoose.conn;
+    // Await the connection and store it
+    const connection = await connectionPromise;
+    global._mongoConnections[dbKey].conn = connection;
+
+    console.log(`MongoDB connected successfully to database: ${dbKey}`);
+    return connection;
   } catch (error) {
-    global._mongoose.promise = null;
-    console.error("MongoDB connection error:", error);
+    global._mongoConnections[dbKey].promise = null;
+    console.error(`MongoDB connection error for database ${dbKey}:`, error);
     throw error;
   }
 };
