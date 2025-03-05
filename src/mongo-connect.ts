@@ -23,6 +23,7 @@ global._mongoConnections = global._mongoConnections || {};
 export const connectMongo = async (
   options?: ConnectOptions
 ): Promise<typeof mongoose> => {
+  // Use MONGODB_URI from .env by default
   const uri = options?.uri || process.env.MONGODB_URI;
 
   if (!uri) {
@@ -32,14 +33,30 @@ export const connectMongo = async (
     throw new Error(errorMessage);
   }
 
-  // Use dbName as a key, or use a default key if not provided
-  const dbKey = options?.dbName || "default";
+  // Determine connection mode and key
+  const isMultiDbMode = options?.multiDb || false;
+  const dbKey = isMultiDbMode
+    ? options?.dbName || "multi_default"
+    : "single_default";
 
   // Check if we have an existing connection
   const existingConnection = global._mongoConnections[dbKey];
 
-  // Force a new connection for each unique database
-  if (existingConnection?.conn) {
+  // Single database mode (default)
+  if (!isMultiDbMode) {
+    // If we have an existing connection, return it
+    if (existingConnection?.conn) {
+      return existingConnection.conn;
+    }
+
+    // If a connection is being established, wait for it
+    if (existingConnection?.promise) {
+      return await existingConnection.promise;
+    }
+  }
+
+  // Multiple database mode
+  else if (existingConnection?.conn) {
     try {
       // Disconnect existing connection
       await existingConnection.conn.disconnect();
@@ -70,7 +87,7 @@ export const connectMongo = async (
 
     console.log(`MongoDB connected successfully to database: ${dbKey}`);
 
-    //Safely log database name
+    // Safely log database name
     if (connection.connection?.db) {
       console.log(
         `Actual Database Name: ${connection.connection.db.databaseName}`

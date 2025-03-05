@@ -6,53 +6,16 @@
 [![Next.js](https://img.shields.io/badge/Next.js-12.0+-000000.svg)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> A lightweight TypeScript package for easily connecting Next.js applications to MongoDB using Mongoose. Perfect for API routes and serverless functions!
+> A lightweight TypeScript package for easily connecting Next.js applications to MongoDB using Mongoose. Supports both single and multiple database connections!
 
 ## ✨ Features
 
-- 🔌 **Simple Connection** - One-function approach to connect to MongoDB
+- 🔌 **Flexible Connection** - Support for single and multiple database connections
 - 📊 **Connection Caching** - Prevents multiple connections in serverless environments
 - ⚡ **Next.js Optimized** - Perfect for API routes
 - 🔐 **Environment Variables** - Uses `.env` for secure connection string storage
 - 📘 **TypeScript Support** - Full type definitions included
 - 🧩 **Minimal Setup** - Get connected with just a few lines of code
-- 🗄️ **Database Selection** - Optionally specify which database to use
-
-## 📦 Choosing the Right Version
-
-### Single Database Projects
-
-- **Version 1.0.6**
-- Use this version if you're working with only one database
-- Simpler setup and lightweight
-- Recommended for most standard projects
-
-```bash
-npm install mongo-connect-next@1.0.6
-```
-
-### Multiple Database Projects
-
-- **Latest Version (1.1.1+)**
-- Supports multiple database connections
-- More flexible connection management
-- Recommended for complex applications with multiple databases
-
-```bash
-npm install mongo-connect-next
-```
-
-### Version Selection Guide
-
-| Use Case           | Recommended Version | Install Command                        |
-| ------------------ | ------------------- | -------------------------------------- |
-| Single Database    | 1.0.6               | `npm install mongo-connect-next@1.0.6` |
-| Multiple Databases | Latest (1.1.1+)     | `npm install mongo-connect-next`       |
-
-### Quick Tip
-
-- If you're unsure, start with version 1.0.6
-- Upgrade to the latest version if you need multi-database support
 
 ## 📦 Installation
 
@@ -110,18 +73,31 @@ export default async function handler(
 
 ## 💡 Usage Examples
 
-### Specifying Database Name
+### Single Database Connection (Default Mode)
 
 ```typescript
+// Uses MONGODB_URI from .env by default
+await connectMongo();
+
+// Specify a different database name
 await connectMongo({ dbName: "my_database" });
 ```
 
-### Overriding Connection String
+### Multiple Database Connections
 
 ```typescript
+// Enable multi-database mode
 await connectMongo({
-  uri: "mongodb://localhost:27017/my_local_db",
-  dbName: "custom_db_name", // Optional
+  uri: "mongodb://localhost:27017/users_db",
+  dbName: "users_db",
+  multiDb: true, // Enables multiple database connection support
+});
+
+// Connect to another database
+await connectMongo({
+  uri: "mongodb://localhost:27017/products_db",
+  dbName: "products_db",
+  multiDb: true,
 });
 ```
 
@@ -133,69 +109,39 @@ Connects to MongoDB using Mongoose and caches the connection for reuse.
 
 #### Parameters
 
-| Parameter        | Type   | Description               | Required                                   |
-| ---------------- | ------ | ------------------------- | ------------------------------------------ |
-| `options`        | Object | Connection options        | No                                         |
-| `options.uri`    | String | MongoDB connection string | No (defaults to `process.env.MONGODB_URI`) |
-| `options.dbName` | String | Database name to use      | No                                         |
+| Parameter         | Type    | Description               | Required                                   |
+| ----------------- | ------- | ------------------------- | ------------------------------------------ |
+| `options`         | Object  | Connection options        | No                                         |
+| `options.uri`     | String  | MongoDB connection string | No (defaults to `process.env.MONGODB_URI`) |
+| `options.dbName`  | String  | Database name to use      | No                                         |
+| `options.multiDb` | Boolean | Enable multiple DB mode   | No (default: false)                        |
 
 #### Returns
 
 - `Promise<typeof mongoose>` - Promise that resolves to a Mongoose instance
 
-## 🧠 How It Works
+## 🚨 Important Notes
 
-This package uses a global singleton pattern to:
+### Model Definition in Next.js
 
-1. 💾 Cache the MongoDB connection across API route invocations
-2. 🔄 Prevent redundant connections during development hot reloads
-3. ⚡ Ensure efficient connection management in serverless environments
-4. 🔀 Support multiple database connections with explicit database name specification
-
-## 💡 Additional Usage Examples
-
-### Forceful Disconnection and New Connection
-
-The utility now automatically handles disconnecting existing connections to ensure a fresh connection when switching databases:
+When defining models in Next.js, always check if the model already exists:
 
 ```typescript
-// Connect to first database
-await connectMongo({ dbName: "users_db" });
-
-// Automatically disconnects previous connection and creates a new one
-await connectMongo({ dbName: "products_db" });
-```
-
-### Enhanced Logging
-
-The connection utility provides more detailed logging about database connections:
-
-- Confirms successful connection to specific databases
-- Logs actual database names
-- Provides clear error messages for connection issues
-
-## 🚨 Performance Considerations
-
-- The utility now more aggressively manages connections
-- Each `connectMongo()` call with a different `dbName` will create a new connection
-- Existing connections are safely disconnected before creating new ones
-
-## 🚨 Important Note for Next.js
-
-When defining models in Next.js, always check if the model already exists before creating it to prevent errors during hot reloading:
-
-```typescript
-// ✅ Correct way to define models in Next.js
+// ✅ Correct way to define models
 const MyModel =
   mongoose.models.ModelName || mongoose.model("ModelName", schema);
-
-// ❌ Incorrect - may cause errors in development
-const MyModel = mongoose.model("ModelName", schema);
 ```
+
+## 🧠 How It Works
+
+- Efficiently manages MongoDB connections in Next.js
+- Supports both single and multiple database connections
+- Caches connections to prevent redundant connections
+- Automatically handles disconnecting and creating new connections
 
 ## 📋 Complete Example
 
-Here's a more complete example including model definition and API routes:
+Here's a comprehensive example demonstrating multiple use cases:
 
 ```typescript
 // models/User.ts
@@ -210,10 +156,27 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-// Check if model exists before defining it
+// Prevent model recompilation
 const User = mongoose.models.User || mongoose.model("User", UserSchema);
-
 export default User;
+
+// models/Product.ts
+import mongoose from "mongoose";
+
+const ProductSchema = new mongoose.Schema({
+  name: String,
+  price: Number,
+  category: String,
+});
+
+const Product =
+  mongoose.models.Product || mongoose.model("Product", ProductSchema);
+export default Product;
+
+// lib/mongodb.ts
+import { connectMongo } from "mongo-connect-next";
+
+export { connectMongo };
 
 // pages/api/users/index.ts - Get all users
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -226,11 +189,44 @@ export default async function handler(
 ) {
   if (req.method === "GET") {
     try {
-      await connectMongo();
+      // Connect to users database
+      await connectMongo({
+        dbName: "users_db",
+        multiDb: true,
+      });
+
       const users = await User.find({});
       res.status(200).json(users);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch users" });
+    }
+  } else {
+    res.setHeader("Allow", ["GET"]);
+    res.status(405).json({ error: `Method ${req.method} not allowed` });
+  }
+}
+
+// pages/api/products/index.ts - Get all products
+import type { NextApiRequest, NextApiResponse } from "next";
+import { connectMongo } from "../../../lib/mongodb";
+import Product from "../../../models/Product";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method === "GET") {
+    try {
+      // Connect to products database
+      await connectMongo({
+        dbName: "products_db",
+        multiDb: true,
+      });
+
+      const products = await Product.find({});
+      res.status(200).json(products);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch products" });
     }
   } else {
     res.setHeader("Allow", ["GET"]);
@@ -249,7 +245,12 @@ export default async function handler(
 ) {
   if (req.method === "POST") {
     try {
-      await connectMongo();
+      // Connect to users database
+      await connectMongo({
+        dbName: "users_db",
+        multiDb: true,
+      });
+
       const user = new User(req.body);
       await user.save();
       res.status(201).json(user);
