@@ -70,12 +70,12 @@ export const connectMongo = async (
 
     console.log(`MongoDB connected successfully to database: ${dbKey}`);
 
-    // Safely log database name
-    // if (connection.connection?.db) {
-    //   console.log(
-    //     `Actual Database Name: ${connection.connection.db.databaseName}`
-    //   );
-    // }
+    //Safely log database name
+    if (connection.connection?.db) {
+      console.log(
+        `Actual Database Name: ${connection.connection.db.databaseName}`
+      );
+    }
     return connection;
   } catch (error) {
     global._mongoConnections[dbKey].promise = null;

@@ -18,6 +18,42 @@
 - 🧩 **Minimal Setup** - Get connected with just a few lines of code
 - 🗄️ **Database Selection** - Optionally specify which database to use
 
+## 📦 Choosing the Right Version
+
+### Single Database Projects
+
+- **Version 1.0.6**
+- Use this version if you're working with only one database
+- Simpler setup and lightweight
+- Recommended for most standard projects
+
+```bash
+npm install mongo-connect-next@1.0.6
+```
+
+### Multiple Database Projects
+
+- **Latest Version (1.1.1+)**
+- Supports multiple database connections
+- More flexible connection management
+- Recommended for complex applications with multiple databases
+
+```bash
+npm install mongo-connect-next
+```
+
+### Version Selection Guide
+
+| Use Case           | Recommended Version | Install Command                        |
+| ------------------ | ------------------- | -------------------------------------- |
+| Single Database    | 1.0.6               | `npm install mongo-connect-next@1.0.6` |
+| Multiple Databases | Latest (1.1.1+)     | `npm install mongo-connect-next`       |
+
+### Quick Tip
+
+- If you're unsure, start with version 1.0.6
+- Upgrade to the latest version if you need multi-database support
+
 ## 📦 Installation
 
 ```bash
@@ -114,6 +150,35 @@ This package uses a global singleton pattern to:
 1. 💾 Cache the MongoDB connection across API route invocations
 2. 🔄 Prevent redundant connections during development hot reloads
 3. ⚡ Ensure efficient connection management in serverless environments
+4. 🔀 Support multiple database connections with explicit database name specification
+
+## 💡 Additional Usage Examples
+
+### Forceful Disconnection and New Connection
+
+The utility now automatically handles disconnecting existing connections to ensure a fresh connection when switching databases:
+
+```typescript
+// Connect to first database
+await connectMongo({ dbName: "users_db" });
+
+// Automatically disconnects previous connection and creates a new one
+await connectMongo({ dbName: "products_db" });
+```
+
+### Enhanced Logging
+
+The connection utility provides more detailed logging about database connections:
+
+- Confirms successful connection to specific databases
+- Logs actual database names
+- Provides clear error messages for connection issues
+
+## 🚨 Performance Considerations
+
+- The utility now more aggressively manages connections
+- Each `connectMongo()` call with a different `dbName` will create a new connection
+- Existing connections are safely disconnected before creating new ones
 
 ## 🚨 Important Note for Next.js
 
