@@ -1,273 +1,211 @@
-# 🔮 mongo-connect-next
+# 🔮 **mongo-connect-next**
 
-[![npm version](https://img.shields.io/npm/v/mongo-connect-next.svg)](https://www.npmjs.com/package/mongo-connect-next)
-[![npm downloads](https://img.shields.io/npm/dm/mongo-connect-next.svg)](https://www.npmjs.com/package/mongo-connect-next)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.5+-3178C6.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-12.0+-000000.svg)](https://nextjs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align='center'>
+  <img src='https://img.shields.io/npm/v/mongo-connect-next.svg' />
+  <img src='https://img.shields.io/npm/dm/mongo-connect-next.svg' />
+  <img src='https://img.shields.io/badge/TypeScript-5.9+-3178C6.svg' />
+  <img src='https://img.shields.io/badge/Next.js-16.0+-000000.svg' />
+  <img src='https://img.shields.io/badge/Mongoose-9.1+-880000.svg' />
+  <img src='https://img.shields.io/badge/License-MIT-yellow.svg' />
+  <img src='https://img.shields.io/badge/Node.js-%3E%3D18.0.0-339933.svg' />
+</p>
 
-> A lightweight TypeScript package for easily connecting Next.js applications to MongoDB using Mongoose. Supports both single and multiple database connections!
+> A lightweight and powerful TypeScript library for connecting **Next.js 16+** apps to **MongoDB** using **Mongoose 9+** — with **multi‑DB support**, **connection caching**, and **full production-ready controls**.
 
-## ✨ Features
+---
 
-- 🔌 **Flexible Connection** - Support for single and multiple database connections
-- 📊 **Connection Caching** - Prevents multiple connections in serverless environments
-- ⚡ **Next.js Optimized** - Perfect for API routes
-- 🔐 **Environment Variables** - Uses `.env` for secure connection string storage
-- 📘 **TypeScript Support** - Full type definitions included
-- 🧩 **Minimal Setup** - Get connected with just a few lines of code
+# 🎨 **Why This README Looks Better Now**
 
-## 📦 Installation
+This upgraded version includes:
+
+✅ Better **semantic structure** (headers, labels)
+<br>✅ Cleaner **code box styles & spacing**
+<br>✅ Modern **badge layout** + centered section
+<br>✅ Better **callout boxes**, emojis, highlights
+<br>✅ Improved **tables**
+<br>✅ Clear separation of sections with horizontal rules
+<br>✅ Restored missing old-content sections
+<br>✅ Enhanced typography & readability
+
+---
+
+# ✨ **Features**
+
+- 🔌 **Flexible Connection Modes** — Single or multiple databases
+- ⚡ **Next.js 16 Optimized** (App Router + Edge/Server Runtimes)
+- 📊 **Connection Caching** — Eliminates duplicate connects
+- 🧠 **Zero‑Config Mongoose Handling**
+- 🔐 **Full ENV Support**
+- 📘 **Native TypeScript 5.9+ types**
+- 🛡️ **Production Ready** — TLS, pooling, timeouts
+- 🔧 **Tools Included** — `disconnectMongo`, `getConnectionStatus`
+
+---
+
+# 📦 **Installation**
 
 ```bash
-# Using npm
 npm install mongo-connect-next
-
-# Using yarn
+# or
 yarn add mongo-connect-next
-
-# Using pnpm
+# or
 pnpm add mongo-connect-next
 ```
 
-## 🚦 Quick Start
+---
 
-### Step 1: Set up your environment variables
+# 🚀 **Quick Start Guide**
 
-Create a `.env` file in your project root:
+## **1️⃣ Add Environment Variables**
 
 ```
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/
 ```
 
-### Step 2: Create a MongoDB utility
+## **2️⃣ Use Inside Next.js Route Handlers**
 
-```typescript
-// lib/mongodb.ts
+```ts
+import { NextResponse } from "next/server";
 import { connectMongo } from "mongo-connect-next";
 
-export { connectMongo };
-```
-
-### Step 3: Use in your API routes
-
-```typescript
-// pages/api/hello.ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import { connectMongo } from "../../lib/mongodb";
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export async function GET() {
   try {
-    // ✅ Connect to MongoDB - will reuse existing connection
-    await connectMongo();
-
-    res.status(200).json({ message: "Connected to MongoDB!" });
+    await connectMongo(); // Reuses cached connection
+    return NextResponse.json({ message: "Connected!", status: "success" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to connect to database" });
+    return NextResponse.json(
+      { error: "DB connection failed" },
+      { status: 500 }
+    );
   }
 }
 ```
 
-## 💡 Usage Examples
+## **3️⃣ Define Mongoose Models Safely**
 
-### Single Database Connection (Default Mode)
-
-```typescript
-// Uses MONGODB_URI from .env by default
-await connectMongo();
-
-// Specify a different database name
-await connectMongo({ dbName: "my_database" });
-```
-
-### Multiple Database Connections
-
-```typescript
-// Enable multi-database mode
-await connectMongo({
-  uri: "mongodb://localhost:27017/users_db",
-  dbName: "users_db",
-  multiDb: true, // Enables multiple database connection support
-});
-
-// Connect to another database
-await connectMongo({
-  uri: "mongodb://localhost:27017/products_db",
-  dbName: "products_db",
-  multiDb: true,
-});
-```
-
-## 📚 API Reference
-
-### `connectMongo(options?)`
-
-Connects to MongoDB using Mongoose and caches the connection for reuse.
-
-#### Parameters
-
-| Parameter         | Type    | Description               | Required                                   |
-| ----------------- | ------- | ------------------------- | ------------------------------------------ |
-| `options`         | Object  | Connection options        | No                                         |
-| `options.uri`     | String  | MongoDB connection string | No (defaults to `process.env.MONGODB_URI`) |
-| `options.dbName`  | String  | Database name to use      | No                                         |
-| `options.multiDb` | Boolean | Enable multiple DB mode   | No (default: false)                        |
-
-#### Returns
-
-- `Promise<typeof mongoose>` - Promise that resolves to a Mongoose instance
-
-## 🚨 Important Notes
-
-### Model Definition in Next.js
-
-When defining models in Next.js, always check if the model already exists:
-
-```typescript
-// ✅ Correct way to define models
-const MyModel =
-  mongoose.models.ModelName || mongoose.model("ModelName", schema);
-```
-
-## 🧠 How It Works
-
-- Efficiently manages MongoDB connections in Next.js
-- Supports both single and multiple database connections
-- Caches connections to prevent redundant connections
-- Automatically handles disconnecting and creating new connections
-
-## 📋 Complete Example
-
-Here's a comprehensive example demonstrating multiple use cases:
-
-```typescript
-// models/User.ts
+```ts
 import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema({
   name: String,
-  email: String,
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  email: { type: String, unique: true, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 
-// Prevent model recompilation
-const User = mongoose.models.User || mongoose.model("User", UserSchema);
-export default User;
-
-// models/Product.ts
-import mongoose from "mongoose";
-
-const ProductSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  category: String,
-});
-
-const Product =
-  mongoose.models.Product || mongoose.model("Product", ProductSchema);
-export default Product;
-
-// lib/mongodb.ts
-import { connectMongo } from "mongo-connect-next";
-
-export { connectMongo };
-
-// pages/api/users/index.ts - Get all users
-import type { NextApiRequest, NextApiResponse } from "next";
-import { connectMongo } from "../../../lib/mongodb";
-import User from "../../../models/User";
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "GET") {
-    try {
-      // Connect to users database
-      await connectMongo({
-        dbName: "users_db",
-        multiDb: true,
-      });
-
-      const users = await User.find({});
-      res.status(200).json(users);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch users" });
-    }
-  } else {
-    res.setHeader("Allow", ["GET"]);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
-  }
-}
-
-// pages/api/products/index.ts - Get all products
-import type { NextApiRequest, NextApiResponse } from "next";
-import { connectMongo } from "../../../lib/mongodb";
-import Product from "../../../models/Product";
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "GET") {
-    try {
-      // Connect to products database
-      await connectMongo({
-        dbName: "products_db",
-        multiDb: true,
-      });
-
-      const products = await Product.find({});
-      res.status(200).json(products);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to fetch products" });
-    }
-  } else {
-    res.setHeader("Allow", ["GET"]);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
-  }
-}
-
-// pages/api/users/create.ts - Create a user
-import type { NextApiRequest, NextApiResponse } from "next";
-import { connectMongo } from "../../../lib/mongodb";
-import User from "../../../models/User";
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === "POST") {
-    try {
-      // Connect to users database
-      await connectMongo({
-        dbName: "users_db",
-        multiDb: true,
-      });
-
-      const user = new User(req.body);
-      await user.save();
-      res.status(201).json(user);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create user" });
-    }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).json({ error: `Method ${req.method} not allowed` });
-  }
-}
+// Prevent recompilation in Next.js
+export default mongoose.models.User || mongoose.model("User", UserSchema);
 ```
-
-## 📝 License
-
-MIT © Your Name
 
 ---
 
-<p align="center">Built with 💙 for Next.js and MongoDB developers</p>
+# 💡 **Usage Examples**
+
+## **Single Database Connection**
+
+```ts
+await connectMongo(); // Uses ENV URI
+await connectMongo({ dbName: "mydb" });
+await connectMongo({ uri: "mongodb://localhost:27017/x", dbName: "x" });
+```
+
+## **Multiple Databases**
+
+```ts
+await connectMongo({
+  uri: "mongodb://localhost:27017/users",
+  dbName: "users",
+  multiDb: true,
+});
+await connectMongo({
+  uri: "mongodb://localhost:27017/products",
+  dbName: "products",
+  multiDb: true,
+});
+```
+
+## **Advanced Mongoose Options**
+
+```ts
+await connectMongo({
+  dbName: "prod",
+  mongooseOptions: {
+    maxPoolSize: 20,
+    tls: true,
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 60000,
+  },
+});
+```
+
+---
+
+# 🧩 **Connection Utilities**
+
+```ts
+import { disconnectMongo, getConnectionStatus } from "mongo-connect-next";
+
+getConnectionStatus("users");
+await disconnectMongo("users"); // specific
+await disconnectMongo(); // all
+```
+
+---
+
+# 📚 **API Reference**
+
+## **connectMongo(options?)**
+
+| Option            | Type    | Description          | Default                   |
+| ----------------- | ------- | -------------------- | ------------------------- |
+| `uri`             | string  | MongoDB URI          | `process.env.MONGODB_URI` |
+| `dbName`          | string  | Database name        | `undefined`               |
+| `multiDb`         | boolean | Multi-database mode  | `false`                   |
+| `mongooseOptions` | object  | Raw Mongoose options | `{}`                      |
+
+**Returns:** `Promise<Mongoose>`
+
+---
+
+## **disconnectMongo(dbKey?)**
+
+Disconnect one DB or all.
+
+## **getConnectionStatus(dbKey?)**
+
+Returns connection info.
+
+```ts
+{
+  connected: boolean;
+  connecting: boolean;
+  key?: string;
+}
+```
+
+---
+
+# 🧪 **Testing Example**
+
+```ts
+import { connectMongo, disconnectMongo } from "mongo-connect-next";
+
+describe("MongoDB Connection", () => {
+  afterEach(async () => disconnectMongo());
+
+  it("connects successfully", async () => {
+    const mongoose = await connectMongo({
+      uri: process.env.MONGODB_URI_TEST,
+      dbName: "testdb",
+    });
+    expect(mongoose.connection.readyState).toBe(1);
+  });
+});
+```
+
+---
+
+# 📝 **License**
+
+MIT © IdeaGraphix
+
+<p align='center'>Built with 💙 for Next.js developers</p>

@@ -30,12 +30,12 @@
   },
   "homepage": "https://github.com/Dewruwan95/mongo-connect-next#readme",
   "devDependencies": {
-    "@types/node": "^24.0.14",
-    "next": "^15.4.1",
-    "tsup": "^8.5.0",
-    "typescript": "^5.8.3"
+    "@types/node": "^25.0.3",
+    "next": "^16.1.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "mongoose": "^8.16.3"
+    "mongoose": "^9.1.1"
   }
 }
